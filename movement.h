@@ -1,3 +1,6 @@
+#ifndef _MOVEMENT_H_
+#define _MOVEMENT_H_
+
 #include <stdconst.h>
 
 /* 			tank controls
@@ -16,3 +19,5 @@ void momentary_move(enum Movement c, SBYTE speed);
 //void move_1_unit(enum movement c);
 
 //void movement_board();
+
+#endif
