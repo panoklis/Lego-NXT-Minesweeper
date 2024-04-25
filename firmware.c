@@ -13,6 +13,9 @@
 #include "led.h"
 #include "aclock.h"
 #include "timer.h"
+#include "movement.h"
+#include "arm2avr.h"
+#include "colour_sight.h"
 
 void sound_board(){
     ULONG pattern1[] = {0xFFFFFFFF}; // 1111 1111 1111 1111
@@ -125,58 +128,32 @@ void sound_board(){
     SBYTE volatile speed = 0x00;
     UBYTE volatile tmp_speed = 0x00;
     enum button_t button = BUTTON_NONE;
+    DisplayString(0,8,"DRIVE ME");
+    DisplayUpdateSync();
     OutputInit();
     while(1){
       I2CTransfer();
       button = ButtonRead();
       switch (button){
         case BUTTON_LEFT:
-          if (speed == -100){
-            speed = 100;
-          }
-          else{
-            speed--;
-          }
-          DisplayString(0,0,"Speed: ");
-          DisplayChar(48,0,speed<0 ? '-' : ' ');
-          if (speed < 0) {tmp_speed = -speed;}
-          else {tmp_speed = speed;}
-          DisplayChar(54,0,tmp_speed>99 ? '1' : '0');
-          DisplayChar(60,0,tmp_speed>9 ? '0' + (tmp_speed/10 - tmp_speed/100*10) : ' ');
-          DisplayChar(66,0,'0' + tmp_speed%10);
-          DisplayUpdateSync();
+         momentary_move(left , 50);
           break;
         case BUTTON_RIGHT:
-          if (speed == 100){
-            speed = -100;
-          }
-          else{
-            speed++;
-          }
-          DisplayString(0,0,"Speed: ");
-          DisplayChar(48,0,speed<0 ? '-' : ' ');
-          if (speed < 0) {tmp_speed = -speed;}
-          else {tmp_speed = speed;}
-          DisplayChar(54,0,tmp_speed>99 ? '1' : '0');
-          DisplayChar(60,0,tmp_speed>9 ? '0' + (tmp_speed/10 - tmp_speed/100*10) : '0');
-          DisplayChar(66,0,'0' + tmp_speed%10);
-          DisplayUpdateSync();
+          momentary_move(right , 50);
           break;
         case BUTTON_ENTER:
-          OutputSetSpeed(1, speed);
-          OutputSetSpeed(2, speed);
-          OutputSetSpeed(3, speed);
-          OutputSetSpeed(4, speed);
+         momentary_move(ahead , 60);
           break;
         case BUTTON_EXIT:
-          OutputSetSpeed(1, 0);
-          OutputSetSpeed(2, 0);
-          OutputSetSpeed(3, 0);
-          OutputSetSpeed(4, 0);
+          momentary_move(ahead , -50);
           break;
+          case BUTTON_NONE:
+          	momentary_move(ahead , 0);
       }
     }
   }
+
+void light_board();
 
 int main(void) {
   DisplayInit(); 
@@ -191,9 +168,10 @@ int main(void) {
   ButtonInit();
   OutputInit();
   StartTimer();
-
-  DisplayString(30,16,"LEFT: SoundBoard");
-  DisplayString(30,32,"RIGHT: MotorBoard");
+  LED(0,0);
+  DisplayString(30,0,"LEFT: SoundBoard");
+  DisplayString(30,16,"RIGHT: MotorBoard");
+  DisplayString(30,32,"EXIT: LightBoard");
   DisplayUpdateSync();
   while(1){
     I2CTransfer();
@@ -209,6 +187,16 @@ int main(void) {
         DisplayUpdateSync();
         motor_board();
         break;
+        case BUTTON_ENTER:
+        DisplayErase();
+        DisplayUpdateSync();
+        motor_board();
+        break;
+        case BUTTON_EXIT:
+        DisplayErase();
+        DisplayUpdateSync();
+        light_board();
+        break;
     }
   }
 
@@ -222,3 +210,50 @@ int main(void) {
 
   return 0;
 }
+
+void light_board(){
+	enum colour x;
+	while(1){
+		I2CTransfer();
+		DisplayString(30,32,"ENTER: Store colour");				//store light value
+		DisplayNum(10,10,IoFromAvr.AdValue[0]);
+		DisplayUpdateSync();
+		
+		if (ButtonRead() == BUTTON_ENTER){
+			store_colour(black, IoFromAvr.AdValue[0]);
+			break;			
+		}
+	}
+	DisplayErase();
+	DisplayString(30,32,"ENTER: Search colour");
+	DisplayUpdateSync();
+	
+	for(int i =0 ; i< 250 ;i ++) I2CTransfer(); //let ENTER button go
+	
+	while (1){
+		I2CTransfer();
+		if (ButtonRead() == BUTTON_ENTER) break;
+	}
+	DisplayErase();									//search 4 light value
+	while(1){									//move straight till found
+		I2CTransfer();
+		DisplayString(30,32,"searching 4 colour");
+		DisplayNum(10,10,IoFromAvr.AdValue[0]);
+		DisplayUpdateSync();
+		 x = get_colour();
+		if(x!= unset) break;
+		momentary_move(ahead , 60);
+	}
+	momentary_move(ahead , 0);
+	I2CTransfer();
+	I2CTransfer();
+	
+	DisplayErase();
+	if(x== black)
+		DisplayString(30,32,"black");
+	DisplayUpdateSync();
+		
+	while(1);
+	
+}
+
