@@ -1,7 +1,7 @@
 #include "colour_sight.h"
 #include "arm2avr.h"
 
-#define ERROR_MARGIN  20
+#define ERROR_MARGIN  3
 
 
 void store_colour(enum colour colour, UWORD sensor_value){
@@ -12,9 +12,10 @@ void store_colour(enum colour colour, UWORD sensor_value){
 enum colour get_colour(){
 	UWORD value = IoFromAvr.AdValue[0];
 	
-	for (enum colour colour = unset+1 ;colour <NO_OF_COLOURS;colour++)
-		if(value == stored_colour_values[colour])return colour;
-		
+	for (enum colour colour = unset+1 ;colour <NO_OF_COLOURS;colour++){
+		int colour_diff = value - stored_colour_values[colour];
+		if(colour_diff <= ERROR_MARGIN && colour_diff >= -ERROR_MARGIN )return colour;
+	}	
 	return unset;
 	}
 
