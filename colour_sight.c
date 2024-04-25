@@ -1,8 +1,7 @@
 #include "colour_sight.h"
 #include "arm2avr.h"
 
-#define ERROR_MARGIN  3
-
+#define ERROR_MARGIN  20
 
 void store_colour(enum colour colour, UWORD sensor_value){
 	stored_colour_values[colour]=sensor_value;	
