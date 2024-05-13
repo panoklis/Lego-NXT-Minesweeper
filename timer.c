@@ -45,7 +45,7 @@ void Sleep(ULONG ms_to_wait){
 
 void I2CSleep(ULONG ms_to_wait){
     ULONG x = ms + ms_to_wait;
-    while(ms <= x);
+    while(ms <= x)
         I2CTransfer();
     return;
 }

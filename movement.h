@@ -11,8 +11,9 @@
  * but they will after a single reset (?)
  * brick is 21 cm in length
  */
-
-#define RWHEEL 2
+		//2
+		//3
+#define RWHEEL 2 
 #define LWHEEL 3
 
 enum Movement{ahead=0,right=1,left=2};
