@@ -15,7 +15,8 @@
 #define MIC 0
 //500 ms click is bit 0
 //1000 ms click is bit 1	
-#define BIT_DURATION 500
+#define BIT_DURATION 1000
+			//500
 
 
 enum Com_cmd {com_ahead=0 ,com_right=1,com_left=2, com_go=3};

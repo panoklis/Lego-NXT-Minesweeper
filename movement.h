@@ -26,7 +26,8 @@ void momentary_move(enum Movement c, SBYTE speed);
 //this function makes i2c transfers to move the brick
 //90 degrees left/right or 1 unit ahead
 //then returns
-void unit_move(enum Movement c);
+//if small_scale_mode is not 0 then ahead move is shorter
+void unit_move(enum Movement c , int small_scale_mode);
 
 //void movement_board();
 

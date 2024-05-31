@@ -9,6 +9,8 @@
 
 #define NOISE_MARGIN 5
 
+#define SMALL_SCALE 1
+
 static UWORD silence=0;
 
 
@@ -48,7 +50,7 @@ enum Com_cmd * listen(){
 
 	UWORD sound;
 	long long int sum=0;
-	unsigned int frst_bit ,snd_bit ,i=0;
+	unsigned int i=0;
 	
 	enum Com_cmd current_cmd=com_right;
 	
@@ -128,7 +130,10 @@ unsigned int sound_to_bit2(){	//500 ms click is 0 1000 ms click is 1
 void execute_msg(enum Com_cmd * msg){
 	enum Com_cmd curr= msg[0];
 	int i=1;
-	while(i!= com_go && i <=3){unit_move ((enum Movement) sound_get_cmd()); i++;}
+	while(i!= com_go && i <=3){
+		unit_move ((enum Movement) sound_get_cmd() , SMALL_SCALE); 
+		i++;
+	}
 	free(msg);
 	}
 
@@ -179,24 +184,25 @@ void send_bit(unsigned short b){
 	ULONG pattern[] = {0xFFFF0000};
 	
 	#define sound_sync_1_s 180
+	#define sound_sync_2_s 2*sound_sync_1_s
 	
 	switch (b) {
 		case 0 :
-				//500ms click
-			for(int i =0 ; i < sound_sync_1_s/2 ; i ++){
+				//1000ms click
+			for(int i =0 ; i < sound_sync_2_s/2 ; i ++){
 				SoundSync(pattern, sizeof(pattern), 255, 1);	//SoundASync doesnt work
 				I2CTransfer();
 			}
-				//500ms silence
-				Sleep(500);
+				//1000ms silence
+				Sleep(1000);
 			break;
 		case 1 :
-			for(int i =0 ; i < sound_sync_1_s ; i ++){
+			for(int i =0 ; i < sound_sync_2_s+30 ; i ++){
 				SoundSync(pattern, sizeof(pattern), 255, 1);	//SoundASync doesnt work
 				I2CTransfer();
 			}
 			break;
-		default : Sleep(1000);
+		default : Sleep(2000);
 	}
 	
 	
@@ -241,17 +247,21 @@ void controller(){
     switch (button) {
       case BUTTON_LEFT:
         send_cmd(com_left);
-        Sleep(500);
+        Sleep(1000);
         continue;
       case BUTTON_RIGHT:
          send_cmd(com_right);
-         Sleep(500);
+         Sleep(1000);
          continue;
       case BUTTON_ENTER:
-        send_cmd(com_ahead);
-        Sleep(500);
+        send_bit(1);
+        //send_cmd(com_ahead);
+        Sleep(1000);
         continue;
-        default:
+       case BUTTON_EXIT:
+       	//send_cmd(com_go);
+       	send_bit(0);
+       	Sleep(1000);
         continue;
     }
   }
@@ -268,6 +278,23 @@ void slave(){
 	}
 	silence = sum/10;
 	
-	while(1) unit_move(sound_get_cmd());
+	i=1;
+	
+	sound_get_cmd();	//start when the other brick says so
+	
+	momentary_move(ahead, 56);//keep moving slowly
+	
+	/*	
+	while(1) {
+		DisplayNum(10,10, sound_to_bit2()+1);
+		DisplayNum(20,10 , i++);
+		DisplayUpdateSync();
+	}*/
+	
+		
+	while(1){
+		unit_move(sound_to_bit2()+1, SMALL_SCALE);
+		momentary_move(ahead, 58);
+		}
 }
 
