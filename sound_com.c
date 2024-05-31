@@ -178,20 +178,20 @@ void send_cmd(enum Com_cmd cmd){
 void send_bit(unsigned short b){
 	ULONG pattern[] = {0xFFFF0000};
 	
-	#define sound_sync_1_s 360
+	#define sound_sync_1_s 180
 	
 	switch (b) {
 		case 0 :
 				//500ms click
-			for(int i =0 ; i < sound_sync_1_s/2 +20 ; i ++){
+			for(int i =0 ; i < sound_sync_1_s/2 ; i ++){
 				SoundSync(pattern, sizeof(pattern), 255, 1);	//SoundASync doesnt work
 				I2CTransfer();
 			}
 				//500ms silence
-				Sleep(1000);
+				Sleep(500);
 			break;
 		case 1 :
-			for(int i =0 ; i < sound_sync_1_s +50; i ++){
+			for(int i =0 ; i < sound_sync_1_s ; i ++){
 				SoundSync(pattern, sizeof(pattern), 255, 1);	//SoundASync doesnt work
 				I2CTransfer();
 			}
@@ -235,14 +235,7 @@ void sound_com_demo(enum Com_demo role){
 }
 
 void controller(){
-  DisplayString(0,0,"Controller");
-  DisplayString(0,8,"Left: Left");
-  DisplayString(0,16,"Right: Right");
-  DisplayString(0,24,"Enter: Ahead");
-  DisplayString(0,32,"Exit: Exit");
-  DisplayUpdateSync();
-  int  run = 1;
-  while(run){
+  while(1){
     I2CTransfer();
     enum button_t button = ButtonRead();
     switch (button) {
@@ -258,9 +251,7 @@ void controller(){
         send_cmd(com_ahead);
         Sleep(500);
         continue;
-	  case BUTTON_EXIT:
-	  	run=0;
-      default:
+        default:
         continue;
     }
   }
