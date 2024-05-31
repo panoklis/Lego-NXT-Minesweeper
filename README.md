@@ -31,11 +31,15 @@
 ## Build & Flash
 
 ```cd ./mapper; make```
+
 Connect 1st LEGO brick via USB to flash firmware.
+
 ```make download```
 
 ```cd ./minesweeper; make```
+
 Connect 2nd LEGO brick via USB to flash firmware.
+
 ```make download```
 
 # Usage
@@ -48,12 +52,17 @@ Turn off with IR device or battery removal
 
 # Navigate to each firmware's directory
  Mapper ::
+
 ```cd ./mapper```
+
  Minesweeper ::
+ 
 ```cd ./minesweeper```
 
 # Contributing
 
 Alexandros Kyparissis - CSD4210
+
 Dimitris Vorgias - CSD4604
+
 Panos Alexiou - CSD3665
