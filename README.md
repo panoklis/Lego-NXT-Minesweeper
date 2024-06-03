@@ -49,7 +49,7 @@ Navigate the menus to activate minesweeper & mapper
 Turn off with IR device or battery removal
 
 # Clone the repository
-```git clone https://githhttps://gitlab-csd.datacenter.uoc.gr/csd3665/as5_project_24.git```
+```git clone https://github.com/panoklis/Lego-NXT-Minesweeper.git```
 
 # Navigate to each firmware's directory
  Mapper ::
@@ -62,10 +62,10 @@ Turn off with IR device or battery removal
 
 # Contributing
 
-Alexandros Kyparissis - CSD4210
+[Alexandros Kyparissis - CSD4210](https://github.com/Bela-Kamilo)
 
 Matthaios Iliakis - CSD4304
 
 Dimitris Vorgias - CSD4604
 
-Panos Alexiou - CSD3665
+[Panos Alexiou - CSD3665](https://github.com/panoklis)
