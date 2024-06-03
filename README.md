@@ -27,6 +27,7 @@
 - Obstacle detection & avoidance
 - Sound communication
 - Mapping of path traversed
+- Colour recognition (unused)
 
 ## Build & Flash
 
