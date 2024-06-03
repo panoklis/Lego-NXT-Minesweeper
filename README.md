@@ -66,6 +66,6 @@ Turn off with IR device or battery removal
 
 Matthaios Iliakis - CSD4304
 
-Dimitris Vorgias - CSD4604
+[Dimitris Vorgias - CSD4604](https://github.com/vorgias)
 
 [Panos Alexiou - CSD3665](https://github.com/panoklis)
