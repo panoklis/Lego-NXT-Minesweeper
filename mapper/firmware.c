@@ -16,115 +16,9 @@
 #include "movement.h"
 #include "arm2avr.h"
 #include "colour_sight.h"
+#include "sound_com.h"
 
-void sound_board(){
-    ULONG pattern1[] = {0xFFFFFFFF}; // 1111 1111 1111 1111
-    ULONG pattern2[] = {0xFFFF0000}; // 1111 1111 0000 0000
-    ULONG pattern3[] = {0xF0F0F0F0}; // 1111 0000 1111 0000
-    ULONG pattern4[] = {0xCCCCCCCC}; // 1100 1100 1100 1100
-    ULONG pattern5[] = {0xAAAAAAAA}; // 1010 1010 1010 1010
-    ULONG pattern6[] = {
-                          0xFFFFFFFF, 0xFFFFFFFF}; // 16b ffff
-
-    UBYTE volatile rate = 0x00;
-    UBYTE volatile pattern = 0x00;
-    enum button_t old_button = BUTTON_NONE;
-
-    while(1) {
-      I2CTransfer();
-      enum button_t button = ButtonRead();
-      if (old_button == button && button != BUTTON_NONE && button != BUTTON_ENTER) {
-        continue;
-      }
-      switch(button) {
-        case BUTTON_LEFT:
-          if (rate == 0x00){
-            rate = 0xFF;
-          }
-          else{
-            rate--;
-          }
-          DisplayString(0,0,"Rate: ");
-          DisplayChar(30,0,rate>99 ? '0' + rate/100 : ' ');
-          DisplayChar(36,0,rate>9 ? '0' + rate/10 - rate/100*10 : ' ');
-          DisplayChar(42,0,'0' + rate%10);
-          DisplayUpdateSync();
-          //I2CSleep(100);
-          break;
-        case BUTTON_ENTER:
-          switch (pattern) {
-            case 0x00:
-              SoundSync(pattern1, sizeof(pattern1), rate, 1);
-              break;
-            case 0x01:
-              SoundSync(pattern2, sizeof(pattern2), rate, 1);
-              break;
-            case 0x02:
-              SoundSync(pattern3, sizeof(pattern3), rate, 1);
-              break;
-            case 0x03:
-              SoundSync(pattern4, sizeof(pattern4), rate, 1);
-              break;
-            case 0x04:
-              SoundSync(pattern5, sizeof(pattern5), rate, 1);
-              break;
-            case 0x05:
-              SoundSync(pattern6, sizeof(pattern6), rate, 1);
-              break;
-          }
-          break;
-        case BUTTON_RIGHT:
-          if (rate == 0xFF){
-            rate = 0x00;
-          }
-          else{
-            rate++;
-          }
-          DisplayString(0,0,"Rate: ");
-          DisplayChar(30,0,rate>99 ? '0' + rate/100 : ' ');
-          DisplayChar(36,0,rate>9 ? '0' + rate/10 - rate/100*10 : ' ');
-          DisplayChar(42,0,'0' + rate%10);
-          DisplayUpdateSync();
-          //I2CSleep(100);
-          break;
-        case BUTTON_EXIT:
-          if (pattern == 0x05){
-            pattern = 0x00;
-          }
-          else{
-            pattern++;
-          }
-          switch (pattern) {
-            case 0x00:
-              DisplayString(0,8,"PTRN1:FFFF-FFFF");
-              break;
-            case 0x01:
-              DisplayString(0,8,"PTRN2:FFFF-0000");
-              break;
-            case 0x02:
-              DisplayString(0,8,"PTRN3:F0F0-F0F0");
-              break;
-            case 0x03:
-              DisplayString(0,8,"PTRN4:CCCC-CCCC");
-              break;
-            case 0x04:
-              DisplayString(0,8,"PTRN5:AAAA-AAAA");
-              break;
-            case 0x05:
-              DisplayString(0,8,"PTRN6:1B-0B");
-              break;
-          }
-          DisplayUpdateSync();
-          //I2CSleep(250);
-          break;
-        case BUTTON_NONE:
-          break;
-      }
-      old_button = button;
-    }
-  }
-
-  void motor_board(){
+void motor_board(){
     SBYTE volatile speed = 0x00;
     UBYTE volatile tmp_speed = 0x00;
     enum button_t button = BUTTON_NONE;
@@ -147,15 +41,37 @@ void sound_board(){
         case BUTTON_EXIT:
           momentary_move(ahead , -50);
           break;
-          case BUTTON_NONE:
-          	momentary_move(ahead , 0);
+        case BUTTON_NONE:
+          momentary_move(ahead , 0);
       }
     }
   }
 
-void light_board();
 
+enum MenuOptions{MAZERUNNER=0,REMOTECONTROLLED=1,REMOTECONTROLLER=2,COLOURCONFIG=3};
+void light_board();
+void controlled_board();
+void controller_board();
+void maze_board();
+void clear_cursor(enum MenuOptions option){  DisplayString(90, 16*option," "); }
+void print_menu(enum MenuOptions option){
+ 
+  DisplayString(0,0,"Maze Runner");
+  DisplayString(0,16,"Rmt Cntrled");
+  DisplayString(0,32,"Remote Cntrler");
+  DisplayString(0,48,"Colour Config");
+  DisplayString(90, 16*option,"<");
+  DisplayUpdateSync();
+}
+void dance();
+//void beep(){for(int i =0; i<150;i++) SoundSync(0xFFFFFFFF, sizeof(ULONG),0x1A, 1);}
 int main(void) {
+  enum MenuOptions option=MAZERUNNER;
+  void (*options[4])(void);	
+  options[MAZERUNNER]=maze_board;//maze_board;
+  options[REMOTECONTROLLED]=controlled_board;
+  options[REMOTECONTROLLER]=controller_board;
+  options[COLOURCONFIG]=light_board;
   DisplayInit(); 
   DisplayUpdateSync();
   LedSwitchOn(2);
@@ -169,30 +85,34 @@ int main(void) {
   OutputInit();
   StartTimer();
   LED(0,0);
-  DisplayString(30,0,"LEFT: SoundBoard");
-  DisplayString(30,16,"RIGHT: MotorBoard");
-  DisplayString(30,32,"EXIT: LightBoard");
-  DisplayUpdateSync();
-  while(1){
+  print_menu(option); 
+while(1){
     I2CTransfer();
     enum button_t button = ButtonRead();
     switch (button) {
       case BUTTON_LEFT:
-        DisplayErase();
-        DisplayUpdateSync();
-        sound_board();
-        break;
+	clear_cursor(option);
+      	option= --option % 4;
+	print_menu(option);	
+        I2CSleep(250);
+	break;
       case BUTTON_RIGHT:
+	clear_cursor(option);
+      	option= ++option % 4;
+	print_menu(option);
+        I2CSleep(250);
+	break;
+      case BUTTON_ENTER:
         DisplayErase();
         DisplayUpdateSync();
-        motor_board();
-        break;
-        case BUTTON_ENTER:
+        I2CSleep(250);
+        options[option]();
         DisplayErase();
-        DisplayUpdateSync();
-        motor_board();
+        DisplayUpdateSync();	
+	print_menu(option);
         break;
-        case BUTTON_EXIT:
+      case BUTTON_EXIT:
+	break;
         DisplayErase();
         DisplayUpdateSync();
         light_board();
@@ -211,6 +131,25 @@ int main(void) {
   return 0;
 }
 
+void controller_board(){
+	while(1){
+		I2CTransfer();
+		switch(ButtonRead()){
+			case BUTTON_RIGHT :
+				send_bit(1);
+				break;
+			case BUTTON_LEFT :
+				send_bit(0);
+				break;
+			case BUTTON_ENTER :
+				break;
+			case BUTTON_EXIT :
+        			I2CSleep(250);
+				return;
+		}
+	}
+}
+
 void light_board(){
 	enum colour x;
 	while(1){
@@ -224,6 +163,10 @@ void light_board(){
 			break;			
 		}
 	}
+	DisplayErase();
+        DisplayUpdateSync(); 
+        I2CSleep(250);
+	return;
 	DisplayErase();
 	DisplayString(30,32,"ENTER: Search colour");
 	DisplayUpdateSync();
@@ -257,3 +200,80 @@ void light_board(){
 	
 }
 
+void listen_board(){ sound_com_demo(sound_slave);}
+void display_next_movement_cmd(enum Movement c, int ordinal);
+void maze_board(){
+	enum Movement commands[100];
+	int i=0,c=0;
+	while(!c){
+		I2CTransfer();
+		switch(ButtonRead()){
+			case BUTTON_RIGHT :
+				display_next_movement_cmd(left, i);
+        			commands[i++]=left;
+				I2CSleep(700);
+				break;
+			case BUTTON_LEFT :
+				display_next_movement_cmd(right, i);
+        			commands[i++]=right;
+				I2CSleep(700);	
+				break;
+			case BUTTON_ENTER :
+				display_next_movement_cmd(ahead, i);
+        			commands[i++]=ahead;
+        			I2CSleep(700);
+				break;
+			case BUTTON_EXIT :
+				c=1;
+				
+		}
+
+	}
+	
+	for(int j =0;j<i;j++)
+		if (! unit_move(commands[j],0)) {
+			send_bit(0);
+			return;
+		}
+	return;
+}
+
+void display_next_movement_cmd(enum Movement c, int ordinal){
+	switch(c){
+		case right :
+		  DisplayString((ordinal%12)*8, 8*(ordinal/12), "<, ");
+			break;
+		case left:
+		  DisplayString((ordinal%12)*8, 8*(ordinal/12), ">, ");
+			break;
+		case ahead :
+		  DisplayString((ordinal%12)*8, 8*(ordinal/12), "^, ");	
+			break;
+	}	
+	DisplayUpdateSync();	
+}
+void controlled_board(){sound_com_demo(sound_slave);}
+void dance(){
+
+#define SMALL_SCALE_F 0
+//unit_move(ahead , SMALL_SCALE_F); return;
+
+
+unit_move(right, SMALL_SCALE_F);
+
+unit_move(left , SMALL_SCALE_F);
+
+
+while(1){
+unit_move(ahead , SMALL_SCALE_F);
+
+unit_move(right, SMALL_SCALE_F); 
+unit_move(right, SMALL_SCALE_F);
+
+unit_move(ahead, SMALL_SCALE_F);
+
+unit_move(left, SMALL_SCALE_F);
+unit_move(left, SMALL_SCALE_F);
+
+}
+}

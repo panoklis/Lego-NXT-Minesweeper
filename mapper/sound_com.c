@@ -109,18 +109,18 @@ unsigned int sound_to_bit2(){	//500 ms click is 0 1000 ms click is 1
 	//500ms have passed , was it just noise? 
 	if( median_sound(sample, sizeof(sample)) + NOISE_MARGIN >= silence) return 2;	// silence
 
-     	//so it has been ticking for 500ms
+     	//so it has been ticking for 1000ms
      	sum=0;
       	for(int i =0 ;i <BIT_DURATION/2 ; i ++){
 		I2CTransfer();
 		sound=IoFromAvr.AdValue[MIC];
 		sample[i]= sound;
 	}	
-	//1000ms have passed now 
+	//2000ms have passed now 
 	if( median_sound(sample, sizeof(sample)) + NOISE_MARGIN >= silence ) 
-		return 0;						//500ms click then 500ms silence
+		return 0;						//1000ms click then 1000ms silence
      	else	
-     		return 1;						//1000ms click		
+     		return 1;						//2000ms click		
 		
 		
 	
@@ -139,19 +139,6 @@ void execute_msg(enum Com_cmd * msg){
 
 
 void send_cmd(enum Com_cmd cmd){
-	
-	/*
-	while(1) {send_bit(0); Sleep(500);send_bit(1); Sleep(500);}
-
-	send_bit(0);Sleep(500);send_bit(0);send_bit(0);Sleep(100);send_bit(0);send_bit(0);Sleep(100);send_bit(0);send_bit(0);Sleep(100);send_bit(0);send_bit(0);Sleep(100);send_bit(0);
-	send_bit(0);send_bit(0);send_bit(0);send_bit(0);send_bit(0);send_bit(0);
-	send_bit(0);send_bit(0);send_bit(0);send_bit(0);send_bit(0);send_bit(0);
-	send_bit(1);send_bit(0);send_bit(1);send_bit(0);send_bit(1);send_bit(0);
-	send_bit(1);send_bit(0);send_bit(1);send_bit(0);send_bit(1);send_bit(0);
-	send_bit(1);send_bit(0);send_bit(1);send_bit(0);send_bit(1);send_bit(0);			
-	return;
-	*/
-	
 	
 	
 	switch(cmd){
@@ -198,7 +185,7 @@ void send_bit(unsigned short b){
 			break;
 		case 1 :
 			for(int i =0 ; i < sound_sync_2_s+30 ; i ++){
-				SoundSync(pattern, sizeof(pattern), 255, 1);	//SoundASync doesnt work
+				SoundSync(pattern, sizeof(pattern), 255, 1);
 				I2CTransfer();
 			}
 			break;
