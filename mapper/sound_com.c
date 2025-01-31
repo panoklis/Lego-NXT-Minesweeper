@@ -258,7 +258,7 @@ void slave(){
 	long long int sum=0;
 	UWORD sound;
 	
-	for(int j =0; j <10 ; j++){	//set the sound of relative silence
+	for(int j =0; j <100 ; j++){	//set the sound of relative silence
 		I2CTransfer();
 		sound=IoFromAvr.AdValue[MIC];
 		sum+=sound;

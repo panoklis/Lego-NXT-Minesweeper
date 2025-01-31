@@ -1,7 +1,7 @@
 #include "colour_sight.h"
 #include "arm2avr.h"
 			//adjust  acoording to lighting x_x
-#define ERROR_MARGIN  30
+#define ERROR_MARGIN  15
 
 void store_colour(enum colour colour, UWORD sensor_value){
 	stored_colour_values[colour]=sensor_value;	
@@ -13,8 +13,11 @@ enum colour get_colour(){
 	
 	for (enum colour colour = unset+1 ;colour <NO_OF_COLOURS;colour++){
 		int colour_diff = value - stored_colour_values[colour];
-		if(colour_diff <= ERROR_MARGIN && colour_diff >= -ERROR_MARGIN )return colour;
-	}	
+		colour_diff = (colour_diff>0)?colour_diff:-colour_diff;
+	//	if(colour_diff <= ERROR_MARGIN && colour_diff >= -ERROR_MARGIN )return colour;
+			
+		if(colour_diff <= ERROR_MARGIN )return colour;
+}	
 	return unset;
 	}
 
